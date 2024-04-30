@@ -1,5 +1,5 @@
 FROM node:18-alpine as base
-RUN useradd -r -u 1001 -g nodejs nodejs
+RUN useradd -r -u 10001 -g nodejs nodejs
 USER nodejs
 RUN apk add --no-cache g++ make py3-pip libc6-compat
 WORKDIR /app
@@ -18,8 +18,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN npm ci
 
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN addgroup -g 10001 -S nodejs
+RUN adduser -S nextjs -u 10001
 USER nextjs
 
 
