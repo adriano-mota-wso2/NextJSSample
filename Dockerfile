@@ -13,7 +13,7 @@ RUN npm run build
 FROM base as production
 WORKDIR /app
 
-ENV USER=10014
+USER ${USER_ID}
 ENV NODE_ENV=production
 RUN npm ci
 
