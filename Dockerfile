@@ -8,21 +8,24 @@ FROM base as builder
 WORKDIR /app
 COPY . .
 RUN npm run build
+ENV NODE_ENV=production
+RUN npm ci
 
-# Create a new user with UID 10014
 RUN addgroup -g 10014 choreo && \
     adduser  --disabled-password  --no-create-home --uid 10014 --ingroup choreo choreouser
+RUN addgroup -g 10014 nodejs && \
+    adduser  --disabled-password  --no-create-home --uid 10014 --ingroup nodejs choreouser
+USER nextjs
 
-# Copy the Go source code into the container
+
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+CMD npm start
+
+FROM base as dev
+ENV NODE_ENV=development
+RUN npm install 
 COPY . .
-
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/app -buildvcs=false
-
-FROM alpine
-COPY --from=build-env /go/bin/app /go/bin/app
-
-USER 10014
-ENTRYPOINT ["/go/bin/app"]
+CMD npm run dev
