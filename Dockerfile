@@ -3,7 +3,7 @@ RUN apk add --no-cache g++ make py3-pip libc6-compat
 RUN mkdir /app
 WORKDIR /app
 
-COPY go.mod ./
+EXPOSE 3000
 
 # Get dependancies - will also be cached if we won't change mod/sum
 RUN go mod download
