@@ -1,6 +1,10 @@
-FROM node:18-alpine as base
-RUN useradd -r -u 10001 -g nodejs nodejs
-USER nodejs
+FROM node:18-alpine
+ARG USER=asgusr
+ARG USER_ID=10014
+ARG USER_GROUP=asggrp
+ARG USER_GROUP_ID=10014
+ARG USER_HOME=/home/app
+
 RUN apk add --no-cache g++ make py3-pip libc6-compat
 WORKDIR /app
 COPY package*.json ./
