@@ -1,41 +1,26 @@
-FROM node:18-alpine
-ARG USER=asgusr
-ARG USER_ID=10014
-ARG USER_GROUP=asggrp
-ARG USER_GROUP_ID=10014
-ARG USER_HOME=/home/app
-
-RUN apk add --no-cache g++ make py3-pip libc6-compat
+FROM node:18-alpine as build-env
+RUN mkdir /app
 WORKDIR /app
-COPY package*.json ./
-EXPOSE 3000
 
-FROM base as builder
-WORKDIR /app
+COPY go.mod ./
+
+# Get dependancies - will also be cached if we won't change mod/sum
+RUN go mod download
+
+# Create a new user with UID 10014
+RUN addgroup -g 10014 choreo && \
+    adduser  --disabled-password  --no-create-home --uid 10014 --ingroup choreo choreouser
+
+# Copy the Go source code into the container
 COPY . .
-RUN npm run build
 
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
-FROM base as production
-WORKDIR /app
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/app -buildvcs=false
 
-ENV NODE_ENV=production
-RUN npm ci
+FROM alpine
+COPY --from=build-env /go/bin/app /go/bin/app
 
-RUN addgroup -g 10001 -S nodejs
-RUN adduser -S nextjs -u 10001
-USER nextjs
-
-
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
-
-CMD npm start
-
-FROM base as dev
-ENV NODE_ENV=development
-RUN npm install 
-COPY . .
-CMD npm run dev
+USER 10014
+ENTRYPOINT ["/go/bin/app"]
