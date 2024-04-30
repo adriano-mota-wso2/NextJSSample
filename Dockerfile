@@ -8,6 +8,7 @@ RUN mkdir /app
 WORKDIR /app
 COPY package*.json ./
 EXPOSE 3000
-FROM base as builder
+
+FROM node:18-alpine as builder
 WORKDIR /app
 
