@@ -2,11 +2,12 @@ FROM node:18-alpine as build-env
 RUN apk add --no-cache g++ make py3-pip libc6-compat
 RUN mkdir /app
 WORKDIR /app
-
+COPY package*.json ./
 EXPOSE 3000
-
-# Get dependancies - will also be cached if we won't change mod/sum
-RUN go mod download
+FROM base as builder
+WORKDIR /app
+COPY . .
+RUN npm run build
 
 # Create a new user with UID 10014
 RUN addgroup -g 10014 choreo && \
